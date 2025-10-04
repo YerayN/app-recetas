@@ -1,3 +1,8 @@
 from django.contrib import admin
+from .models import Receta
 
-# Register your models here.
+@admin.register(Receta)
+class RecetaAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'tiempo_preparacion', 'creado_en')
+    search_fields = ('nombre',)
+    list_filter = ('creado_en',)
