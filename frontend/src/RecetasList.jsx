@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getRecetas } from "./services/api";
+import { getRecetas, deleteReceta } from "./services/api";
 import RecetaForm from "./RecetaForm";
 
 export default function RecetasList() {
@@ -11,9 +11,21 @@ export default function RecetasList() {
     try {
       const data = await getRecetas();
       setRecetas(data);
-      setRecetaEditando(null); // salimos del modo edición tras guardar
+      setRecetaEditando(null);
     } catch (err) {
       setError(err.message);
+    }
+  }
+
+  async function handleEliminar(id) {
+    const confirmar = window.confirm("¿Seguro que deseas eliminar esta receta?");
+    if (!confirmar) return;
+
+    try {
+      await deleteReceta(id);
+      await cargarRecetas();
+    } catch (err) {
+      alert("Error al eliminar la receta: " + err.message);
     }
   }
 
@@ -44,6 +56,12 @@ export default function RecetasList() {
               <small>{receta.descripcion}</small>
               <br />
               <button onClick={() => setRecetaEditando(receta)}>Editar</button>
+              <button
+                onClick={() => handleEliminar(receta.id)}
+                style={{ marginLeft: "0.5rem", color: "red" }}
+              >
+                Eliminar
+              </button>
             </li>
           ))}
         </ul>

@@ -26,3 +26,11 @@ export async function updateReceta(id, data) {
   if (!response.ok) throw new Error("Error al actualizar la receta");
   return await response.json();
 }
+
+export async function deleteReceta(id) {
+  const response = await fetch(`${API_URL}/recetas/${id}/`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Error al eliminar la receta");
+  return true;
+}
