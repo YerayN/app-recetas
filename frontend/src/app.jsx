@@ -1,49 +1,63 @@
-import React from "react";
+import { useState } from "react";
 import RecetaForm from "./RecetaForm";
 import RecetasList from "./RecetasList";
 
 export default function App() {
-  return (
-    <div className="min-h-screen bg-gray-100 text-gray-800 p-6">
-          <div className="p-8 text-center bg-blue-100 text-blue-800 rounded-xl shadow-lg">
-      <h1 className="text-3xl font-bold mb-2">🎨 Tailwind está funcionando</h1>
-      <p className="text-gray-600">Si este bloque tiene color y bordes redondeados, todo está bien 😎</p>
-    </div>
+  const [activeSection, setActiveSection] = useState("crear");
 
-      {/* HEADER */}
-      <header className="bg-indigo-600 text-white shadow-md">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <h1 className="text-2xl font-semibold tracking-wide">🍲 Recetas App</h1>
-          <nav className="flex gap-4 text-sm opacity-90">
-            <a href="#" className="hover:text-yellow-300 transition-colors">
-              Inicio
-            </a>
-            <a href="#" className="hover:text-yellow-300 transition-colors">
-              Mis Recetas
-            </a>
-            <a href="#" className="hover:text-yellow-300 transition-colors">
-              Nueva Receta
-            </a>
+  return (
+    <div className="min-h-screen bg-[#faf7f5] flex flex-col text-[#3f3d3b]">
+      {/* Header */}
+      <header className="bg-white border-b border-[#e9ded5] shadow-sm">
+        <div className="max-w-3xl mx-auto px-5 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-[#7a5af8] flex items-center gap-2">
+            🍽️ Recetario
+          </h1>
+          <nav className="flex gap-6 text-sm font-medium text-[#7a5af8]">
+            <button
+              className={`transition-colors ${
+                activeSection === "crear" ? "text-[#5b3cc4]" : "hover:text-[#5b3cc4]"
+              }`}
+              onClick={() => setActiveSection("crear")}
+            >
+              Nueva
+            </button>
+            <button
+              className={`transition-colors ${
+                activeSection === "lista" ? "text-[#5b3cc4]" : "hover:text-[#5b3cc4]"
+              }`}
+              onClick={() => setActiveSection("lista")}
+            >
+              Recetas
+            </button>
           </nav>
         </div>
       </header>
 
-      {/* MAIN CONTENT */}
-      <main className="max-w-6xl mx-auto px-6 py-10 grid md:grid-cols-2 gap-10">
-        <section className="bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4 border-b pb-2">Crear Receta</h2>
-          <RecetaForm />
-        </section>
-
-        <section className="bg-white rounded-2xl shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4 border-b pb-2">Lista de Recetas</h2>
-          <RecetasList />
-        </section>
+      {/* Contenido */}
+      <main className="flex-grow flex justify-center items-start">
+        <div className="w-full max-w-md p-5">
+          {activeSection === "crear" ? (
+            <section className="bg-white rounded-2xl p-6 shadow-md border border-[#e9ded5]">
+              <h2 className="text-lg font-semibold mb-4 text-[#4b3c2f] flex items-center gap-2">
+                🧁 Nueva Receta
+              </h2>
+              <RecetaForm />
+            </section>
+          ) : (
+            <section className="bg-white rounded-2xl p-6 shadow-md border border-[#e9ded5]">
+              <h2 className="text-lg font-semibold mb-4 text-[#4b3c2f] flex items-center gap-2">
+                📚 Tus Recetas
+              </h2>
+              <RecetasList />
+            </section>
+          )}
+        </div>
       </main>
 
-      {/* FOOTER */}
-      <footer className="bg-indigo-700 text-indigo-100 text-center py-3 mt-10 text-sm">
-        © {new Date().getFullYear()} Recetas App — Creado por Yeray 🍳
+      {/* Footer */}
+      <footer className="bg-white border-t border-[#e9ded5] py-4 text-center text-sm text-[#6b5e4e] opacity-70">
+        © {new Date().getFullYear()} Recetario — Creado por Yeray
       </footer>
     </div>
   );
