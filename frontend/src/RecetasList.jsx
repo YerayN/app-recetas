@@ -1,71 +1,34 @@
-import { useEffect, useState } from "react";
-import { getRecetas, deleteReceta } from "./services/api";
-import RecetaForm from "./RecetaForm";
-
-export default function RecetasList() {
-  const [recetas, setRecetas] = useState([]);
-  const [error, setError] = useState(null);
-  const [recetaEditando, setRecetaEditando] = useState(null);
-
-  async function cargarRecetas() {
-    try {
-      const data = await getRecetas();
-      setRecetas(data);
-      setRecetaEditando(null);
-    } catch (err) {
-      setError(err.message);
-    }
-  }
-
-  async function handleEliminar(id) {
-    const confirmar = window.confirm("¿Seguro que deseas eliminar esta receta?");
-    if (!confirmar) return;
-
-    try {
-      await deleteReceta(id);
-      await cargarRecetas();
-    } catch (err) {
-      alert("Error al eliminar la receta: " + err.message);
-    }
-  }
-
-  useEffect(() => {
-    cargarRecetas();
-  }, []);
-
-  if (error) return <p>Error: {error}</p>;
-
+export default function RecetasList({ recetas }) {
   return (
-    <div style={{ padding: "1rem" }}>
-      <h1>📖 Recetas</h1>
-
-      <RecetaForm
-        recetaActual={recetaEditando}
-        onSaved={cargarRecetas}
-        onCancel={() => setRecetaEditando(null)}
-      />
-
-      {recetas.length === 0 ? (
-        <p>No hay recetas todavía.</p>
-      ) : (
-        <ul>
-          {recetas.map((receta) => (
-            <li key={receta.id} style={{ marginBottom: "1rem" }}>
-              <strong>{receta.nombre}</strong> — {receta.tiempo_preparacion} min
-              <br />
-              <small>{receta.descripcion}</small>
-              <br />
-              <button onClick={() => setRecetaEditando(receta)}>Editar</button>
-              <button
-                onClick={() => handleEliminar(receta.id)}
-                style={{ marginLeft: "0.5rem", color: "red" }}
-              >
-                Eliminar
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="max-w-6xl mx-auto px-4 py-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {recetas.map((receta) => (
+        <div
+          key={receta.id}
+          className="bg-white rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden flex flex-col"
+        >
+          {receta.imagen ? (
+            <img
+              src={receta.imagen}
+              alt={receta.nombre}
+              className="h-48 w-full object-cover"
+            />
+          ) : (
+            <div className="h-48 w-full bg-[#A8BDA8]/20 flex items-center justify-center text-[#A8BDA8]">
+              Sin imagen
+            </div>
+          )}
+          <div className="p-4 flex flex-col gap-2 flex-grow">
+            <h3 className="font-semibold text-lg">{receta.nombre}</h3>
+            <p className="text-sm text-gray-500 line-clamp-2">
+              {receta.descripcion}
+            </p>
+            <p className="text-xs text-gray-400">⏱️ {receta.tiempo} min</p>
+            <button className="mt-auto text-[#8B5CF6] font-medium hover:underline self-start">
+              Ver más →
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

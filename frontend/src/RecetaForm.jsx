@@ -1,171 +1,171 @@
-import { useState, useEffect } from "react";
-import { createReceta, updateReceta } from "./services/api";
+import { useState } from "react";
 
-export default function RecetaForm({ recetaActual, onSaved, onCancel }) {
-  const [form, setForm] = useState({
-    nombre: "",
-    descripcion: "",
-    tiempo_preparacion: "",
-    instrucciones: "",
-    ingredientes: [],
-  });
-  const [error, setError] = useState(null);
+export default function RecetaForm({ onSubmit }) {
+  const [nombre, setNombre] = useState("");
+  const [descripcion, setDescripcion] = useState("");
+  const [tiempo, setTiempo] = useState("");
+  const [instrucciones, setInstrucciones] = useState("");
+  const [imagen, setImagen] = useState(null);
+  const [subiendo, setSubiendo] = useState(false);
+  const [mensaje, setMensaje] = useState("");
 
-  // 🧠 Si estamos editando, rellenamos el formulario con los datos actuales
-  useEffect(() => {
-    if (recetaActual) {
-      setForm({
-        nombre: recetaActual.nombre || "",
-        descripcion: recetaActual.descripcion || "",
-        tiempo_preparacion: recetaActual.tiempo_preparacion || "",
-        instrucciones: recetaActual.instrucciones || "",
-        ingredientes: recetaActual.ingredientes || [],
-      });
-    } else {
-      setForm({
-        nombre: "",
-        descripcion: "",
-        tiempo_preparacion: "",
-        instrucciones: "",
-        ingredientes: [],
-      });
-    }
-  }, [recetaActual]);
-
-  // 🧱 Manejadores generales
-  function handleChange(e) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  function handleIngredienteChange(index, field, value) {
-    const nuevos = [...form.ingredientes];
-    nuevos[index][field] = value;
-    setForm({ ...form, ingredientes: nuevos });
-  }
-
-  function agregarIngrediente() {
-    setForm({
-      ...form,
-      ingredientes: [...form.ingredientes, { nombre: "", cantidad: "", unidad: "" }],
-    });
-  }
-
-  function eliminarIngrediente(index) {
-    const nuevos = form.ingredientes.filter((_, i) => i !== index);
-    setForm({ ...form, ingredientes: nuevos });
-  }
-
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    try {
-      const payload = {
-        ...form,
-        tiempo_preparacion: parseInt(form.tiempo_preparacion) || 0,
-        ingredientes: form.ingredientes.map((ing) => ({
-          ...ing,
-          cantidad: parseFloat(ing.cantidad) || 0,
-        })),
-      };
+    setMensaje("");
+    setSubiendo(true);
 
-      if (recetaActual) {
-        await updateReceta(recetaActual.id, payload);
-      } else {
-        await createReceta(payload);
+    try {
+      let imageUrl = "";
+
+      // 1️⃣ Subir imagen a Cloudinary si existe
+      if (imagen) {
+        const data = new FormData();
+        data.append("file", imagen);
+        data.append("upload_preset", "recetas_app");
+
+        console.log("URL Cloudinary usada:", "https://api.cloudinary.com/v1_1/daovhj0i4/image/upload");
+
+        const uploadRes = await fetch(
+          "https://api.cloudinary.com/v1_1/daovhj0i4/image/upload",
+          {
+            method: "POST",
+            body: data,
+          }
+        );
+
+        const uploadData = await uploadRes.json();
+        console.log("Respuesta Cloudinary:", uploadData); // 👈 Añadido
+
+        if (uploadData.secure_url) {
+          imageUrl = uploadData.secure_url;
+        } else {
+          throw new Error("Error al subir imagen a Cloudinary");
+        }
       }
 
-      onSaved();
-    } catch (err) {
-      setError(err.message);
+
+      // 2️⃣ Enviar los datos al backend
+      const formData = new FormData();
+      formData.append("nombre", nombre);
+      formData.append("descripcion", descripcion);
+      formData.append("tiempo_preparacion", tiempo);
+      formData.append("instrucciones", instrucciones);
+      if (imageUrl) formData.append("imagen", imageUrl);
+
+      await onSubmit(formData);
+
+      // 3️⃣ Feedback de éxito
+      setMensaje("✅ Receta guardada correctamente");
+      setNombre("");
+      setDescripcion("");
+      setTiempo("");
+      setInstrucciones("");
+      setImagen(null);
+    } catch (error) {
+      console.error(error);
+      setMensaje("❌ Error al guardar la receta");
+    } finally {
+      setSubiendo(false);
     }
-  }
+  };
 
-  // 🧾 Renderizado
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: "2rem" }}>
-      <h2>{recetaActual ? "Editar receta" : "Nueva receta"}</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-2xl shadow-sm p-6 max-w-2xl mx-auto mt-8 space-y-4"
+    >
+      <h2 className="text-2xl font-semibold text-[#8B5CF6] mb-4">
+        Añadir nueva receta
+      </h2>
 
-      <input
-        name="nombre"
-        placeholder="Nombre"
-        value={form.nombre}
-        onChange={handleChange}
-        required
-      />
-      <br />
-
-      <input
-        name="descripcion"
-        placeholder="Descripción"
-        value={form.descripcion}
-        onChange={handleChange}
-      />
-      <br />
-
-      <input
-        name="tiempo_preparacion"
-        type="number"
-        placeholder="Tiempo (min)"
-        value={form.tiempo_preparacion}
-        onChange={handleChange}
-      />
-      <br />
-
-      <textarea
-        name="instrucciones"
-        placeholder="Instrucciones"
-        value={form.instrucciones}
-        onChange={handleChange}
-      />
-      <br />
-
-      <h3>Ingredientes</h3>
-      {form.ingredientes.map((ing, index) => (
-        <div key={index} style={{ marginBottom: "0.5rem" }}>
-          <input
-            placeholder="Nombre"
-            value={ing.nombre}
-            onChange={(e) => handleIngredienteChange(index, "nombre", e.target.value)}
-            style={{ width: "40%" }}
-          />
-          <input
-            placeholder="Cantidad"
-            type="number"
-            value={ing.cantidad}
-            onChange={(e) => handleIngredienteChange(index, "cantidad", e.target.value)}
-            style={{ width: "20%", marginLeft: "0.5rem" }}
-          />
-          <input
-            placeholder="Unidad"
-            value={ing.unidad}
-            onChange={(e) => handleIngredienteChange(index, "unidad", e.target.value)}
-            style={{ width: "20%", marginLeft: "0.5rem" }}
-          />
-          <button
-            type="button"
-            onClick={() => eliminarIngrediente(index)}
-            style={{ marginLeft: "0.5rem", color: "red" }}
-          >
-            ✕
-          </button>
-        </div>
-      ))}
-
-      <button type="button" onClick={agregarIngrediente}>
-        + Añadir ingrediente
-      </button>
-
-      <br />
-      <br />
-
-      <button type="submit">
-        {recetaActual ? "Guardar cambios" : "Crear receta"}
-      </button>
-      {recetaActual && (
-        <button type="button" onClick={onCancel} style={{ marginLeft: "1rem" }}>
-          Cancelar
-        </button>
+      {mensaje && (
+        <p className="text-center text-sm font-medium text-gray-600">{mensaje}</p>
       )}
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Nombre
+        </label>
+        <input
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+          required
+          className="w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-[#8B5CF6]"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Descripción
+        </label>
+        <textarea
+          value={descripcion}
+          onChange={(e) => setDescripcion(e.target.value)}
+          className="w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-[#8B5CF6]"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Tiempo (min)
+        </label>
+        <input
+          type="number"
+          value={tiempo}
+          onChange={(e) => setTiempo(e.target.value)}
+          className="w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-[#8B5CF6]"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Instrucciones
+        </label>
+        <textarea
+          value={instrucciones}
+          onChange={(e) => setInstrucciones(e.target.value)}
+          rows="4"
+          className="w-full border border-gray-200 rounded-lg p-2 focus:ring-2 focus:ring-[#8B5CF6]"
+        />
+      </div>
+
+      {/* Campo imagen */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Imagen de la receta
+        </label>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setImagen(e.target.files[0])}
+          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 
+                     file:rounded-md file:border-0 file:text-sm 
+                     file:font-semibold file:bg-[#8B5CF6]/10 
+                     file:text-[#8B5CF6] hover:file:bg-[#8B5CF6]/20 cursor-pointer"
+        />
+        {imagen && (
+          <div className="mt-3">
+            <img
+              src={URL.createObjectURL(imagen)}
+              alt="Vista previa"
+              className="w-32 h-32 object-cover rounded-lg border border-gray-200"
+            />
+          </div>
+        )}
+      </div>
+
+      <button
+        type="submit"
+        disabled={subiendo}
+        className={`w-full py-3 rounded-xl font-medium transition text-white ${
+          subiendo
+            ? "bg-[#A8BDA8]/60 cursor-not-allowed"
+            : "bg-[#8B5CF6] hover:bg-[#7C3AED]"
+        }`}
+      >
+        {subiendo ? "Subiendo..." : "Guardar receta"}
+      </button>
     </form>
   );
 }

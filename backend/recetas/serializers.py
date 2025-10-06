@@ -32,8 +32,7 @@ class IngredienteRecetaSerializer(serializers.ModelSerializer):
 
 # --- Recetas con ingredientes anidados ---
 class RecetaSerializer(serializers.ModelSerializer):
-    ingredientes = IngredienteRecetaSerializer(many=True)
-
+    ingredientes = IngredienteSerializer(many=True, required=False)
     class Meta:
         model = Receta
         fields = [
