@@ -88,3 +88,10 @@ export async function getIngredientesReceta(recetaId) {
   const data = await handleResponse(response, "Error al obtener los ingredientes de la receta");
   return extractResults(data);
 }
+
+
+export async function fetchIngredientes(search = "") {
+  const response = await fetch(`${API_URL}/ingredientes/?search=${search}`);
+  if (!response.ok) throw new Error("Error al obtener ingredientes");
+  return await response.json();
+}

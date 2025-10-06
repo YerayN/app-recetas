@@ -1,21 +1,26 @@
 import { useState } from 'react';
 import UnitsSelect from './components/UnitsSelect';
 
-export default function App() {
-  const [unitId, setUnitId] = useState(null);
+import IngredienteAutocomplete from "./components/IngredienteAutocomplete";
+
+function App() {
+  const [ingrediente, setIngrediente] = useState(null);
 
   return (
-    <div style={{ maxWidth: 680, margin: '2rem auto', fontFamily: 'system-ui, sans-serif' }}>
-      <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16 }}>Recetas App — Paso 1</h1>
-
-      <label style={{ display: 'block', marginBottom: 8, fontWeight: 600 }}>
-        Unidad
-      </label>
-      <UnitsSelect value={unitId} onChange={setUnitId} />
-
-      <p style={{ marginTop: 16 }}>
-        Unidad seleccionada: <strong>{unitId ?? '—'}</strong>
-      </p>
+    <div className="p-6 max-w-lg mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Prueba de Autocompletado</h1>
+      <IngredienteAutocomplete
+        value={ingrediente}
+        onChange={(i) => setIngrediente(i)}
+      />
+      {ingrediente && (
+        <div className="mt-4 text-sm text-gray-600">
+          Seleccionado: <b>{ingrediente.nombre}</b> (id {ingrediente.id})
+        </div>
+      )}
     </div>
   );
 }
+
+export default App;
+
