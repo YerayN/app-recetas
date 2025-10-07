@@ -1,9 +1,16 @@
-from rest_framework import routers
-from .views import RecetaViewSet, IngredienteViewSet, UnidadViewSet
+from django.contrib import admin
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from recetas.views import RecetaViewSet, IngredienteViewSet, UnidadViewSet, PlanSemanalViewSet
 
-router = routers.DefaultRouter()
-router.register(r'recetas', RecetaViewSet)
-router.register(r'ingredientes', IngredienteViewSet)
-router.register(r'unidades', UnidadViewSet)
+router = DefaultRouter()
+router.register(r"recetas", RecetaViewSet, basename="receta")
+router.register(r"ingredientes", IngredienteViewSet, basename="ingrediente")
+router.register(r"unidades", UnidadViewSet, basename="unidad")
+router.register(r"plan", PlanSemanalViewSet, basename="plan")
 
-urlpatterns = router.urls
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("api/", include(router.urls)),
+    path("api-auth/", include("rest_framework.urls")),
+]

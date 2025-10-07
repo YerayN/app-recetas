@@ -1,8 +1,7 @@
 from rest_framework import serializers
-from .models import Receta, Ingrediente, Unidad, IngredienteReceta
+from .models import Receta, Ingrediente, Unidad, IngredienteReceta, PlanSemanal
 
 
-# --- Serializers base ---
 class UnidadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Unidad
@@ -15,28 +14,23 @@ class IngredienteSerializer(serializers.ModelSerializer):
         fields = ['id', 'nombre']
 
 
-# --- Ingredientes dentro de una receta ---
 class IngredienteRecetaSerializer(serializers.ModelSerializer):
-    # Usamos PrimaryKeyRelatedField para vincular con modelos normalizados
-    ingrediente = serializers.PrimaryKeyRelatedField(
-        queryset=Ingrediente.objects.all()
-    )
-    unidad = serializers.PrimaryKeyRelatedField(
-        queryset=Unidad.objects.all()
-    )
+    ingrediente = serializers.PrimaryKeyRelatedField(queryset=Ingrediente.objects.all())
+    unidad = serializers.PrimaryKeyRelatedField(queryset=Unidad.objects.all())
 
     class Meta:
         model = IngredienteReceta
         fields = ['id', 'ingrediente', 'cantidad', 'unidad']
 
 
-# --- Recetas con ingredientes anidados ---
 class RecetaSerializer(serializers.ModelSerializer):
     ingredientes = IngredienteSerializer(many=True, required=False)
+
     class Meta:
         model = Receta
         fields = [
             'id',
+            'hogar',
             'nombre',
             'descripcion',
             'tiempo_preparacion',
@@ -46,6 +40,7 @@ class RecetaSerializer(serializers.ModelSerializer):
             'creado_en',
             'actualizado_en',
         ]
+        read_only_fields = ['hogar']
 
     def create(self, validated_data):
         ingredientes_data = validated_data.pop('ingredientes', [])
@@ -56,13 +51,31 @@ class RecetaSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         ingredientes_data = validated_data.pop('ingredientes', [])
-        # Actualizamos campos de la receta
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-
-        # Reemplazamos los ingredientes asociados
         instance.ingredientes.all().delete()
         for ingrediente in ingredientes_data:
             IngredienteReceta.objects.create(receta=instance, **ingrediente)
         return instance
+
+
+class PlanSemanalSerializer(serializers.ModelSerializer):
+    receta = RecetaSerializer(read_only=True)
+    receta_id = serializers.PrimaryKeyRelatedField(
+        queryset=Receta.objects.all(), source='receta', write_only=True
+    )
+
+    class Meta:
+        model = PlanSemanal
+        fields = [
+            'id',
+            'hogar',
+            'dia',
+            'tipo_comida',
+            'receta',
+            'receta_id',
+            'creado_por',
+            'creado_en',
+        ]
+        read_only_fields = ['hogar', 'creado_por', 'creado_en']

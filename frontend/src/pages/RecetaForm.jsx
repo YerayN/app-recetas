@@ -71,6 +71,7 @@ const handleSubmit = async (e) => {
       await fetch(`http://127.0.0.1:8000/api/recetas/${id}/`, {
         method: "PUT",
         body: formData,
+        credentials: "include",
       });
       setMensaje("✅ Receta actualizada correctamente");
 
@@ -82,6 +83,7 @@ const handleSubmit = async (e) => {
       const res = await fetch(`http://127.0.0.1:8000/api/recetas/`, {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
 
       const data = await res.json();
