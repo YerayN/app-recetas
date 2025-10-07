@@ -132,26 +132,22 @@ def _split_env(name, default_list=None):
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://app-recetas-puce.vercel.app",
+    "https://app-recetas-front.vercel.app",  # 👈 Frontend en producción
 ]
 
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://app-recetas-puce.vercel.app",
-    "https://app-recetas-production.up.railway.app",
+    "https://app-recetas-front.vercel.app",  # 👈 Confía también para peticiones con cookies
 ]
 
 
 CORS_ALLOW_CREDENTIALS = True
-
-# Cookies compatibles con dominio cruzado (Railway <-> Vercel)
-IS_PROD = not DEBUG
-SESSION_COOKIE_SAMESITE = "None" if IS_PROD else None
-SESSION_COOKIE_SECURE = IS_PROD
-CSRF_COOKIE_SAMESITE = "None" if IS_PROD else None
-CSRF_COOKIE_SECURE = IS_PROD
+SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = None
+CSRF_COOKIE_SECURE = True
 
 # ------------------------------------------------
 # ⚙️ REST FRAMEWORK CONFIG
