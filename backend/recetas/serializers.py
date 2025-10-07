@@ -42,6 +42,7 @@ class RecetaSerializer(serializers.ModelSerializer):
             'tiempo_preparacion',
             'instrucciones',
             'ingredientes',
+            'imagen',
             'creado_en',
             'actualizado_en',
         ]

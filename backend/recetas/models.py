@@ -26,6 +26,7 @@ class Receta(models.Model):
     instrucciones = models.TextField()
     creado_en = models.DateTimeField(auto_now_add=True)
     actualizado_en = models.DateTimeField(auto_now=True)
+    imagen = models.URLField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return self.nombre
