@@ -18,6 +18,9 @@ import {
   ShoppingCartIcon,
 } from "@heroicons/react/24/outline";
 
+const API = "http://127.0.0.1:8000/api"; // 👈 unifica aquí
+
+
 function AppContent() {
   const [recetas, setRecetas] = useState([]);
   const navigate = useNavigate();
@@ -26,7 +29,7 @@ function AppContent() {
   // 🧾 Cargar recetas desde el backend
   const fetchRecetas = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/recetas/");
+      const res = await fetch(`${API}/recetas/`);      
       if (!res.ok) throw new Error("Error al cargar recetas");
       const data = await res.json();
       setRecetas(data);
@@ -42,27 +45,40 @@ function AppContent() {
   // 🧁 Crear receta
   const handleCreate = async (formData) => {
     try {
-      const res = await fetch("http://localhost:8000/api/recetas/", {
+      const res = await fetch(`${API}/recetas/`, {
         method: "POST",
         body: formData,
       });
 
-      const data = await res.json();
-      console.log("Respuesta del backend:", data);
+      // Intenta leer el json aunque no sea 200
+      const data = await res.json().catch(() => ({}));
 
-      if (res.ok) {
-        await fetchRecetas();
-        navigate("/recetas");
-      } else {
-        alert("Error al guardar receta. Mira la consola para detalles.");
+      if (!res.ok) {
+        console.error("POST /recetas/ error:", data);
+        const msg =
+          typeof data === "object" && data
+            ? Object.entries(data)
+                .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`)
+                .join("\n")
+            : "Error al guardar receta";
+        alert(`❌ ${msg}`);
+        return;
       }
+
+      // DRF suele devolver el objeto creado. Lo añadimos o recargamos todo:
+      // setRecetas(prev => [data, ...prev]); // opción rápida
+      await fetchRecetas(); // opción consistente
+
+      navigate("/recetas");
     } catch (error) {
       console.error("Error al crear receta:", error);
+      alert("❌ Error de conexión con el servidor");
     }
   };
 
+
   return (
-    <div className="min-h-screen bg-[#FAF8F6] text-gray-800 flex flex-col font-['Inter'] pb-20">
+    <div className="min-h-screen bg-[#FAF8F6] text-gray-800 flex flex-col font-['Inter'] pb-20 md:pb-0">
       {/* HEADER */}
 <header className="w-full border-b border-gray-200 bg-[#FAF8F6]/70 backdrop-blur-md sticky top-0 z-10">
   <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
@@ -187,16 +203,29 @@ function AppContent() {
           {/* FORMULARIO NUEVA RECETA */}
           <Route
             path="/recetas/nueva"
-            element={<RecetaForm onSubmit={handleCreate} />}
+            element={<RecetaForm onSubmit={handleCreate} onUpdate={fetchRecetas} />}
           />
 
           {/* DETALLES DE RECETA */}
-          <Route path="/recetas/:id" element={<RecetaDetalle />} />
-        </Routes>
+          <Route
+            path="/recetas/:id"
+            element={<RecetaDetalle onDelete={fetchRecetas} />}
+          />
+
+          {/* EDITAR RECETA */}
+          <Route
+            path="/recetas/:id/editar"
+            element={<RecetaForm modo="editar" onUpdate={fetchRecetas} />}
+          />
+
+
+          </Routes>
+
       </main>
 
       {/* NAV INFERIOR (solo móvil) */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around items-center py-2 z-50 shadow-md">
+        {/* 🏠 Inicio */}
         <Link
           to="/"
           className={`flex flex-col items-center text-xs transition-colors ${
@@ -205,22 +234,38 @@ function AppContent() {
               : "text-gray-600 hover:text-[#8B5CF6]"
           }`}
         >
-          <HomeIcon className="w-6 h-6 mb-1" />
+          <div
+            className={`p-2 rounded-full ${
+              pathname === "/" ? "bg-[#8B5CF6]/10" : ""
+            }`}
+          >
+            <HomeIcon className="w-6 h-6 mb-1" />
+          </div>
           Inicio
         </Link>
 
+        {/* 📘 Recetas */}
         <Link
           to="/recetas"
           className={`flex flex-col items-center text-xs transition-colors ${
-            pathname.startsWith("/recetas")
+            pathname === "/recetas" || /^\/recetas\/\d+$/.test(pathname)
               ? "text-[#8B5CF6]"
               : "text-gray-600 hover:text-[#8B5CF6]"
           }`}
         >
-          <BookOpenIcon className="w-6 h-6 mb-1" />
+          <div
+            className={`p-2 rounded-full ${
+              pathname === "/recetas" || /^\/recetas\/\d+$/.test(pathname)
+                ? "bg-[#8B5CF6]/10"
+                : ""
+            }`}
+          >
+            <BookOpenIcon className="w-6 h-6 mb-1" />
+          </div>
           Recetas
         </Link>
 
+        {/* ➕ Nueva */}
         <Link
           to="/recetas/nueva"
           className={`flex flex-col items-center text-xs transition-colors ${
@@ -229,10 +274,17 @@ function AppContent() {
               : "text-gray-600 hover:text-[#8B5CF6]"
           }`}
         >
-          <PlusCircleIcon className="w-6 h-6 mb-1" />
+          <div
+            className={`p-2 rounded-full ${
+              pathname === "/recetas/nueva" ? "bg-[#8B5CF6]/10" : ""
+            }`}
+          >
+            <PlusCircleIcon className="w-6 h-6 mb-1" />
+          </div>
           Nueva
         </Link>
 
+        {/* 📅 Plan */}
         <Link
           to="/plan-semanal"
           className={`flex flex-col items-center text-xs transition-colors ${
@@ -241,10 +293,17 @@ function AppContent() {
               : "text-gray-600 hover:text-[#8B5CF6]"
           }`}
         >
-          <CalendarIcon className="w-6 h-6 mb-1" />
+          <div
+            className={`p-2 rounded-full ${
+              pathname.startsWith("/plan-semanal") ? "bg-[#8B5CF6]/10" : ""
+            }`}
+          >
+            <CalendarIcon className="w-6 h-6 mb-1" />
+          </div>
           Plan
         </Link>
 
+        {/* 🛒 Lista */}
         <Link
           to="/lista"
           className={`flex flex-col items-center text-xs transition-colors ${
@@ -253,14 +312,21 @@ function AppContent() {
               : "text-gray-600 hover:text-[#8B5CF6]"
           }`}
         >
-          <ShoppingCartIcon className="w-6 h-6 mb-1" />
+          <div
+            className={`p-2 rounded-full ${
+              pathname.startsWith("/lista") ? "bg-[#8B5CF6]/10" : ""
+            }`}
+          >
+            <ShoppingCartIcon className="w-6 h-6 mb-1" />
+          </div>
           Lista
         </Link>
       </nav>
 
+
       {/* FOOTER */}
-      <footer className="border-t border-gray-200 text-center py-6 text-sm text-gray-500">
-        © {new Date().getFullYear()} Yeray · Recetas App
+      <footer className="hidden md:block border-t border-gray-200 text-center py-3 text-sm text-gray-500 mt-auto">
+        © {new Date().getFullYear()} Yeray Navarro · Recetas App
       </footer>
     </div>
   );

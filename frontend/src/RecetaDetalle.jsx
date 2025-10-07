@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 
-export default function RecetaDetalle() {
+export default function RecetaDetalle({ onDelete }) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [receta, setReceta] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -102,6 +103,32 @@ export default function RecetaDetalle() {
           <p className="whitespace-pre-line leading-relaxed text-gray-700">
             {receta.instrucciones || "Sin instrucciones registradas."}
           </p>
+        </div>
+
+        {/* 🔧 Botones CRUD */}
+        <div className="flex gap-3 mt-6">
+          <Link
+            to={`/recetas/${receta.id}/editar`}
+            className="px-4 py-2 rounded-lg bg-[#8B5CF6] text-white text-sm font-medium hover:bg-[#7C3AED] transition"
+          >
+            ✏️ Editar
+          </Link>
+          <button
+            onClick={async () => {
+              if (confirm("¿Seguro que quieres eliminar esta receta?")) {
+                await fetch(`http://127.0.0.1:8000/api/recetas/${receta.id}/`, {
+                  method: "DELETE",
+                });
+
+                if (onDelete) onDelete();
+                alert("✅ Receta eliminada correctamente");
+                navigate("/recetas");
+              }
+            }}
+            className="px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 transition"
+          >
+            🗑️ Eliminar
+          </button>
         </div>
       </div>
     </div>
