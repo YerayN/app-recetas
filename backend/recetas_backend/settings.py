@@ -18,7 +18,12 @@ SECRET_KEY = os.getenv(
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 # Railway y Vercel pasarán estos valores por variables de entorno
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+ALLOWED_HOSTS = [
+    "app-recetas-production.up.railway.app",
+    "localhost",
+    "127.0.0.1",
+]
+
 
 # ------------------------------------------------
 # 📦 APLICACIONES
