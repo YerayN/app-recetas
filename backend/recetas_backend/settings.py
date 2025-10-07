@@ -129,14 +129,15 @@ def _split_env(name, default_list=None):
     return [v.strip() for v in value.split(",") if v.strip()]
 
 # Local por defecto
-CORS_ALLOWED_ORIGINS = _split_env(
-    "CORS_ALLOWED_ORIGINS",
-    ["http://localhost:5173", "http://127.0.0.1:5173"],
-)
-CSRF_TRUSTED_ORIGINS = _split_env(
-    "CSRF_TRUSTED_ORIGINS",
-    ["http://localhost:5173", "http://127.0.0.1:5173"],
-)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "https://tu-frontend.vercel.app",  # ← cámbialo cuando lo despleguemos
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.vercel.app",
+    "https://app-recetas-production.up.railway.app",
+]
 
 CORS_ALLOW_CREDENTIALS = True
 

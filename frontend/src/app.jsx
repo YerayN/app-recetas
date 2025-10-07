@@ -25,8 +25,7 @@ import {
   ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
-const API = "http://127.0.0.1:8000/api";
-
+import { API_BASE_URL } from "../config";
 function AppContent() {
   const [recetas, setRecetas] = useState([]);
   const navigate = useNavigate();
