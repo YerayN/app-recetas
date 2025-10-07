@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import DiaColumna from "../components/DiaColumna";
 import ModalSeleccionReceta from "../components/ModalSeleccionReceta";
 
-import { API_BASE_URL } from "../config";
+import { API } from "../config";
 const diasSemana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const tiposComida = ["desayuno", "almuerzo", "comida", "merienda", "cena", "snack"];
 
