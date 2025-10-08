@@ -17,20 +17,12 @@ SECRET_KEY = os.getenv(
 )
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-# Detectar si estamos en producción
-# ⚠️ CAMBIO: Detectar por múltiples métodos
+# Detectar entorno Railway (producción)
 IS_PRODUCTION = (
-    os.getenv("RAILWAY_ENVIRONMENT") is not None or
-    os.getenv("RAILWAY_PROJECT_ID") is not None or
-    "railway.app" in os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
+    os.getenv("RAILWAY_ENVIRONMENT") is not None
+    or "railway.app" in os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
 )
 
-# 🐛 DEBUG: Imprimir para verificar
-print(f"🔍 IS_PRODUCTION: {IS_PRODUCTION}")
-print(f"🔍 RAILWAY_ENVIRONMENT: {os.getenv('RAILWAY_ENVIRONMENT')}")
-print(f"🔍 RAILWAY_PROJECT_ID: {os.getenv('RAILWAY_PROJECT_ID')}")
-
-# Railway y Vercel pasarán estos valores por variables de entorno
 ALLOWED_HOSTS = [
     "app-recetas-production.up.railway.app",
     "localhost",
@@ -126,61 +118,55 @@ USE_TZ = True
 # ------------------------------------------------
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # ------------------------------------------------
-# 🔄 CORS / CSRF (React frontend)
+# 🔄 CORS / CSRF (Frontend React en Vercel)
 # ------------------------------------------------
 
-# ✅ CORS - Orígenes permitidos
+# Frontend en producción
+FRONTEND_URL = "https://app-recetas-front.vercel.app"
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://app-recetas-front.vercel.app",
+    FRONTEND_URL,
 ]
 
-# Permitir todos los subdominios vercel.app (para previews)
+# Permitir previews y subdominios vercel.app
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.vercel\.app$"]
 
-# CSRF - Orígenes confiables
+# CSRF: dominios de confianza
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://app-recetas-front.vercel.app",
-    "https://app-recetas-production.up.railway.app",
+    FRONTEND_URL,
 ]
 
-# ⚠️ CRÍTICO: Permitir credenciales (cookies)
+# ✅ Enviar cookies de sesión y CSRF al frontend
 CORS_ALLOW_CREDENTIALS = True
 
-# ⚠️ CRÍTICO: Configuración de cookie CSRF
-CSRF_COOKIE_SECURE = IS_PRODUCTION  # True en producción (HTTPS), False en local
-CSRF_COOKIE_HTTPONLY = False  # ⚠️ DEBE SER FALSE para que JS pueda leerla
-CSRF_COOKIE_SAMESITE = 'None' if IS_PRODUCTION else 'Lax'
-CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_COOKIE_DOMAIN = None  # ⚠️ Dejarlo en None para que funcione cross-domain
-
-# 🐛 DEBUG: Imprimir configuración CSRF
-print(f"🔍 CSRF_COOKIE_SECURE: {CSRF_COOKIE_SECURE}")
-print(f"🔍 CSRF_COOKIE_SAMESITE: {CSRF_COOKIE_SAMESITE}")
-print(f"🔍 CSRF_COOKIE_HTTPONLY: {CSRF_COOKIE_HTTPONLY}")
-
-# Configuración de cookie de sesión
+# Cookies seguras cross-domain
 SESSION_COOKIE_SECURE = IS_PRODUCTION
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'None' if IS_PRODUCTION else 'Lax'
-SESSION_COOKIE_DOMAIN = None  # ⚠️ Dejarlo en None
+SESSION_COOKIE_SAMESITE = "None" if IS_PRODUCTION else "Lax"
+SESSION_COOKIE_DOMAIN = None  # None → usa dominio del backend
 
-# 👇 Muy importante para Railway detrás de proxy HTTPS
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+CSRF_COOKIE_SECURE = IS_PRODUCTION
+CSRF_COOKIE_HTTPONLY = False  # JS necesita leerla
+CSRF_COOKIE_SAMESITE = "None" if IS_PRODUCTION else "Lax"
+CSRF_COOKIE_NAME = "csrftoken"
+CSRF_COOKIE_DOMAIN = None
+
+# 🔒 Requerido para que Railway respete HTTPS detrás de proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # ------------------------------------------------
-# ⚙️ REST FRAMEWORK CONFIG
+# ⚙️ REST FRAMEWORK
 # ------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication", 
+        "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
@@ -195,25 +181,13 @@ LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
 # ------------------------------------------------
-# ⚙️ LOGGING (opcional, para depurar)
+# ⚙️ LOGGING
 # ------------------------------------------------
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        }
+        "console": {"class": "logging.StreamHandler"},
     },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": False,
-        },
-    },
+    "root": {"handlers": ["console"], "level": "INFO"},
 }
