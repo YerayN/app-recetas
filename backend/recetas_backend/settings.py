@@ -125,7 +125,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ------------------------------------------------
 
 # Frontend en producción
-FRONTEND_URL = "https://app-recetas-front.vercel.app"
+FRONTEND_URL = "https://ladespensa.vercel.app"
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
@@ -140,6 +140,7 @@ CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.vercel\.app$"]
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "https://api.recetasapp.vercel.app",
     FRONTEND_URL,
 ]
 
@@ -147,16 +148,16 @@ CSRF_TRUSTED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # Cookies seguras cross-domain
-SESSION_COOKIE_SECURE = IS_PRODUCTION
+SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "None" if IS_PRODUCTION else "Lax"
-SESSION_COOKIE_DOMAIN = None  # None → usa dominio del backend
+SESSION_COOKIE_SAMESITE = "None"
+SESSION_COOKIE_DOMAIN = ".vercel.app"
 
-CSRF_COOKIE_SECURE = IS_PRODUCTION
+CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False  # JS necesita leerla
-CSRF_COOKIE_SAMESITE = "None" if IS_PRODUCTION else "Lax"
+CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_NAME = "csrftoken"
-CSRF_COOKIE_DOMAIN = None
+CSRF_COOKIE_DOMAIN = ".vercel.app"
 
 # 🔒 Requerido para que Railway respete HTTPS detrás de proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
