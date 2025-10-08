@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.middleware.csrf import get_token
 from .models import Receta, Ingrediente, Unidad, PlanSemanal
 from .serializers import RecetaSerializer, IngredienteSerializer, UnidadSerializer, PlanSemanalSerializer
 
@@ -117,7 +118,7 @@ def register(request):
 def login_view(request):
     """
     Login API para frontend.
-    ⚠️ NO usar @csrf_exempt - DRF maneja CSRF con SessionAuthentication
+    Devuelve el token CSRF en el response header.
     """
     username = request.data.get('username')
     password = request.data.get('password')
@@ -132,10 +133,19 @@ def login_view(request):
     
     if user is not None:
         login(request, user)
-        return Response(
+        
+        # ✅ Generar el token CSRF y devolverlo en el header
+        csrf_token = get_token(request)
+        
+        response = Response(
             {'message': 'Login correcto', 'username': username},
             status=status.HTTP_200_OK
         )
+        
+        # Añadir el token en un header personalizado que el frontend pueda leer
+        response['X-CSRFToken'] = csrf_token
+        
+        return response
     else:
         return Response(
             {'error': 'Usuario o contraseña incorrectos'},
@@ -144,7 +154,7 @@ def login_view(request):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])  # ✅ Añadido para permitir logout sin auth
+@permission_classes([AllowAny])
 def logout_view(request):
     """Logout API — cierra sesión."""
     logout(request)
@@ -154,16 +164,21 @@ def logout_view(request):
     )
 
 
-@ensure_csrf_cookie
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def csrf_cookie_view(request):
     """
-    Endpoint para establecer la cookie CSRF.
-    El decorador @ensure_csrf_cookie garantiza que Django envíe la cookie.
-    El frontend la lee con document.cookie y la envía en el header X-CSRFToken.
+    Endpoint para obtener el token CSRF.
+    Lo devuelve en el response header Y en el body.
     """
-    return Response(
-        {"detail": "CSRF cookie set"},
+    csrf_token = get_token(request)
+    
+    response = Response(
+        {"csrfToken": csrf_token},
         status=status.HTTP_200_OK
     )
+    
+    # Enviar también en el header para que sea más fácil de leer
+    response['X-CSRFToken'] = csrf_token
+    
+    return response
