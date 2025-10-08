@@ -1,6 +1,6 @@
 """
 Django settings for recetas_backend project.
-Configurado para desarrollo local y despliegue en Railway + Vercel.
+Configurado para despliegue en Railway + Vercel.
 """
 
 import os
@@ -17,7 +17,6 @@ SECRET_KEY = os.getenv(
 )
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
-# Detectar entorno Railway (producción)
 IS_PRODUCTION = (
     os.getenv("RAILWAY_ENVIRONMENT") is not None
     or "railway.app" in os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
@@ -33,19 +32,14 @@ ALLOWED_HOSTS = [
 # 📦 APLICACIONES
 # ------------------------------------------------
 INSTALLED_APPS = [
-    # Django base
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
-    # Terceros
     "rest_framework",
     "corsheaders",
-
-    # App propia
     "recetas",
 ]
 
@@ -53,7 +47,7 @@ INSTALLED_APPS = [
 # 🧩 MIDDLEWARE
 # ------------------------------------------------
 MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",  # ⚠️ importante: arriba del todo
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -123,8 +117,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ------------------------------------------------
 # 🔄 CORS / CSRF (Frontend React en Vercel)
 # ------------------------------------------------
-
-# Frontend en producción
 FRONTEND_URL = "https://ladespensa.vercel.app"
 
 CORS_ALLOWED_ORIGINS = [
@@ -144,16 +136,14 @@ CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "None"
-SESSION_COOKIE_DOMAIN = None  # ✅ Django usa su propio dominio (railway.app)
+SESSION_COOKIE_DOMAIN = None  # railway.app
 
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_NAME = "csrftoken"
-CSRF_COOKIE_DOMAIN = None  # ✅ igual: dominio automático (railway.app)
+CSRF_COOKIE_DOMAIN = None  # railway.app
 
-
-# 🔒 Requerido para que Railway respete HTTPS detrás de proxy
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # ------------------------------------------------
