@@ -117,32 +117,31 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # ------------------------------------------------
 # 🔄 CORS / CSRF (Frontend React en Vercel)
 # ------------------------------------------------
-FRONTEND_URL = "https://ladespensa.vercel.app"
+FRONTEND_URL = "https://app-recetas-front.vercel.app"
 
 CORS_ALLOWED_ORIGINS = [
-    "https://ladespensa.vercel.app",
+    "https://app-recetas-front.vercel.app",
     "http://localhost:5173",
     "http://127.0.0.1:5173",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://ladespensa.vercel.app",
+    "https://app-recetas-front.vercel.app",
     "https://app-recetas-production.up.railway.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
-# 🔒 Cookies seguras cross-domain
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "None"
-SESSION_COOKIE_DOMAIN = None  # railway.app
+SESSION_COOKIE_DOMAIN = None
 
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "None"
 CSRF_COOKIE_NAME = "csrftoken"
-CSRF_COOKIE_DOMAIN = None  # railway.app
+CSRF_COOKIE_DOMAIN = None
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
