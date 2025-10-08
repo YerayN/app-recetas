@@ -14,6 +14,7 @@ from recetas.views import (
     # ✅ 1. Importar la nueva vista
     csrf_cookie_view, 
 )
+from . import views
 
 router = DefaultRouter()
 router.register(r"recetas", RecetaViewSet, basename="receta")
@@ -33,4 +34,5 @@ urlpatterns = [
     
     # ✅ 2. Añadir la ruta completa que el frontend busca: /api/auth/csrf-cookie/
     path('api/auth/csrf-cookie/', csrf_cookie_view, name='csrf-cookie'),
+    path("csrf/", views.csrf_token_view, name="csrf_token_view"),
 ]

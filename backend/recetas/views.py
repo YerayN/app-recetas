@@ -8,6 +8,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.middleware.csrf import get_token
 from .models import Receta, Ingrediente, Unidad, PlanSemanal
 from .serializers import RecetaSerializer, IngredienteSerializer, UnidadSerializer, PlanSemanalSerializer
+from django.http import JsonResponse
 
 
 # ------------------- VISTAS CRUD PRINCIPALES -------------------
@@ -182,3 +183,11 @@ def csrf_cookie_view(request):
     response['X-CSRFToken'] = csrf_token
     
     return response
+
+
+def csrf_token_view(request):
+    """
+    Devuelve el token CSRF como JSON.
+    Esto permite que el frontend (Vercel) lo obtenga antes de hacer login.
+    """
+    return JsonResponse({"csrfToken": get_token(request)})

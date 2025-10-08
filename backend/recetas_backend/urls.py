@@ -23,6 +23,7 @@ router.register(r"plan", PlanSemanalViewSet, basename="plan")
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/", include("recetas.urls")),
     path("api/", include(router.urls)),
     path("api-auth/", include("rest_framework.urls")),
 
