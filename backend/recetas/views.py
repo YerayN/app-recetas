@@ -7,8 +7,9 @@ from django.contrib.auth import authenticate, login, logout
 from .models import Receta, Ingrediente, Unidad, PlanSemanal
 from .serializers import RecetaSerializer, IngredienteSerializer, UnidadSerializer, PlanSemanalSerializer
 
-from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import ensure_csrf_cookie
+
+
 
 
 # ------------------- VISTAS CRUD PRINCIPALES -------------------
@@ -29,7 +30,6 @@ class IngredienteViewSet(viewsets.ModelViewSet):
     search_fields = ["nombre"]
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class RecetaViewSet(viewsets.ModelViewSet):
     """CRUD para Recetas del hogar actual"""
     queryset = Receta.objects.all()
@@ -58,7 +58,6 @@ class RecetaViewSet(viewsets.ModelViewSet):
         serializer.save(hogar=perfil.hogar)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class PlanSemanalViewSet(viewsets.ModelViewSet):
     """CRUD para el Plan Semanal, filtrado por hogar del usuario"""
     queryset = PlanSemanal.objects.all()
@@ -88,7 +87,7 @@ class PlanSemanalViewSet(viewsets.ModelViewSet):
 
 # ------------------- AUTENTICACIÓN -------------------
 
-@csrf_exempt
+
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register(request):
@@ -109,7 +108,7 @@ def register(request):
                     status=status.HTTP_201_CREATED)
 
 
-@csrf_exempt
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -126,9 +125,19 @@ def login_view(request):
                         status=status.HTTP_401_UNAUTHORIZED)
 
 
-@csrf_exempt
+
 @api_view(['POST'])
 def logout_view(request):
     """Logout API — cierra sesión."""
     logout(request)
     return Response({'message': 'Logout correcto'}, status=status.HTTP_200_OK)
+
+
+@ensure_csrf_cookie
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def csrf_cookie_view(request):
+    """
+    Simplemente establece la cookie CSRF. El token se lee en el frontend.
+    """
+    return Response({"message": "CSRF cookie set"}, status=status.HTTP_200_OK)
