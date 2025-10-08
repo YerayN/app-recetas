@@ -4,12 +4,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.csrf import ensure_csrf_cookie
 from .models import Receta, Ingrediente, Unidad, PlanSemanal
 from .serializers import RecetaSerializer, IngredienteSerializer, UnidadSerializer, PlanSemanalSerializer
-
-from django.views.decorators.csrf import ensure_csrf_cookie
-
-
 
 
 # ------------------- VISTAS CRUD PRINCIPALES -------------------
@@ -38,11 +35,11 @@ class RecetaViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        perfil = getattr(user, "perfil", None)
 
         if not user.is_authenticated:
             return Receta.objects.none()
 
+        perfil = getattr(user, "perfil", None)
         if not perfil or not getattr(perfil, "hogar", None):
             print("⚠️ Usuario sin perfil o sin hogar asociado:", user)
             return Receta.objects.none()
@@ -68,9 +65,11 @@ class PlanSemanalViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not user.is_authenticated:
             return PlanSemanal.objects.none()
+        
         perfil = getattr(user, "perfil", None)
         if perfil is None or perfil.hogar is None:
             return PlanSemanal.objects.none()
+        
         return (
             PlanSemanal.objects.filter(hogar=perfil.hogar)
             .select_related("receta")
@@ -87,7 +86,6 @@ class PlanSemanalViewSet(viewsets.ModelViewSet):
 
 # ------------------- AUTENTICACIÓN -------------------
 
-
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def register(request):
@@ -96,41 +94,64 @@ def register(request):
     password = request.data.get("password")
 
     if not username or not password:
-        return Response({"error": "Faltan campos obligatorios."},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "Faltan campos obligatorios."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     if User.objects.filter(username=username).exists():
-        return Response({"error": "El usuario ya existe."},
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "El usuario ya existe."},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     User.objects.create_user(username=username, password=password)
-    return Response({"message": "Usuario creado correctamente."},
-                    status=status.HTTP_201_CREATED)
-
+    return Response(
+        {"message": "Usuario creado correctamente."},
+        status=status.HTTP_201_CREATED
+    )
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
-    """Login API (para frontend con fetch)."""
+    """
+    Login API para frontend.
+    ⚠️ NO usar @csrf_exempt - DRF maneja CSRF con SessionAuthentication
+    """
     username = request.data.get('username')
     password = request.data.get('password')
 
+    if not username or not password:
+        return Response(
+            {'error': 'Faltan credenciales'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
     user = authenticate(request, username=username, password=password)
+    
     if user is not None:
         login(request, user)
-        return Response({'message': 'Login correcto'}, status=status.HTTP_200_OK)
+        return Response(
+            {'message': 'Login correcto', 'username': username},
+            status=status.HTTP_200_OK
+        )
     else:
-        return Response({'error': 'Usuario o contraseña incorrectos'},
-                        status=status.HTTP_401_UNAUTHORIZED)
-
+        return Response(
+            {'error': 'Usuario o contraseña incorrectos'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])  # ✅ Añadido para permitir logout sin auth
 def logout_view(request):
     """Logout API — cierra sesión."""
     logout(request)
-    return Response({'message': 'Logout correcto'}, status=status.HTTP_200_OK)
+    return Response(
+        {'message': 'Logout correcto'},
+        status=status.HTTP_200_OK
+    )
 
 
 @ensure_csrf_cookie
@@ -138,6 +159,11 @@ def logout_view(request):
 @permission_classes([AllowAny])
 def csrf_cookie_view(request):
     """
-    Simplemente establece la cookie CSRF. El token se lee en el frontend.
+    Endpoint para establecer la cookie CSRF.
+    El decorador @ensure_csrf_cookie garantiza que Django envíe la cookie.
+    El frontend la lee con document.cookie y la envía en el header X-CSRFToken.
     """
-    return Response({"message": "CSRF cookie set"}, status=status.HTTP_200_OK)
+    return Response(
+        {"detail": "CSRF cookie set"},
+        status=status.HTTP_200_OK
+    )

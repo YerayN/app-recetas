@@ -17,6 +17,9 @@ SECRET_KEY = os.getenv(
 )
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
+# Detectar si estamos en producción
+IS_PRODUCTION = os.getenv("RAILWAY_ENVIRONMENT") is not None
+
 # Railway y Vercel pasarán estos valores por variables de entorno
 ALLOWED_HOSTS = [
     "app-recetas-production.up.railway.app",
@@ -120,16 +123,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # 🔄 CORS / CSRF (React frontend)
 # ------------------------------------------------
 
-def _split_env(name, default_list=None):
-    value = os.getenv(name)
-    if not value:
-        return default_list or []
-    return [v.strip() for v in value.split(",") if v.strip()]
-
-# 🚫 Quita esto en producción: CORS_ALLOW_ALL_ORIGINS
-# CORS_ALLOW_ALL_ORIGINS = True  # ❌ desactivado por seguridad
-
-# ✅ CORS y CSRF correctos
+# ✅ CORS - Orígenes permitidos
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -139,6 +133,7 @@ CORS_ALLOWED_ORIGINS = [
 # Permitir todos los subdominios vercel.app (para previews)
 CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.vercel\.app$"]
 
+# CSRF - Orígenes confiables
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
@@ -147,12 +142,19 @@ CSRF_TRUSTED_ORIGINS = [
     "https://*.vercel.app",
 ]
 
-# Configuración de cookies cross-domain
+# ⚠️ CRÍTICO: Permitir credenciales (cookies)
 CORS_ALLOW_CREDENTIALS = True
-SESSION_COOKIE_SAMESITE = None
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SAMESITE = None
-CSRF_COOKIE_SECURE = True
+
+# ⚠️ CRÍTICO: Configuración de cookie CSRF
+CSRF_COOKIE_SECURE = IS_PRODUCTION  # True en producción (HTTPS), False en local
+CSRF_COOKIE_HTTPONLY = False  # ⚠️ DEBE SER FALSE para que JS pueda leerla
+CSRF_COOKIE_SAMESITE = 'None' if IS_PRODUCTION else 'Lax'
+CSRF_COOKIE_NAME = 'csrftoken'
+
+# Configuración de cookie de sesión
+SESSION_COOKIE_SECURE = IS_PRODUCTION
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = 'None' if IS_PRODUCTION else 'Lax'
 
 # 👇 Muy importante para Railway detrás de proxy HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -161,8 +163,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # ⚙️ REST FRAMEWORK CONFIG
 # ------------------------------------------------
 REST_FRAMEWORK = {
-    # ❌ ESTABA VACÍA: "DEFAULT_AUTHENTICATION_CLASSES": [],
-    # ✅ AÑADIR SESSION AUTHENTICATION
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication", 
     ],
