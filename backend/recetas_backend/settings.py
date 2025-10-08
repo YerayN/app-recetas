@@ -161,9 +161,10 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # ⚙️ REST FRAMEWORK CONFIG
 # ------------------------------------------------
 REST_FRAMEWORK = {
-    # ✅ Añade SessionAuthentication para que DRF procese la cookie de sesión
+    # ❌ ESTABA VACÍA: "DEFAULT_AUTHENTICATION_CLASSES": [],
+    # ✅ AÑADIR SESSION AUTHENTICATION
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
+        "rest_framework.authentication.SessionAuthentication", 
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
