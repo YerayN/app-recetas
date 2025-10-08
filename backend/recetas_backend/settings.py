@@ -24,7 +24,6 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
 ]
 
-
 # ------------------------------------------------
 # 📦 APLICACIONES
 # ------------------------------------------------
@@ -128,30 +127,36 @@ def _split_env(name, default_list=None):
         return default_list or []
     return [v.strip() for v in value.split(",") if v.strip()]
 
-# Local por defecto
+# 🚫 Quita esto en producción: CORS_ALLOW_ALL_ORIGINS
+# CORS_ALLOW_ALL_ORIGINS = True  # ❌ desactivado por seguridad
 
-CORS_ALLOW_ALL_ORIGINS = True
-
+# ✅ CORS y CSRF correctos
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://app-recetas-front.vercel.app",  # 👈 Frontend en producción
+    "https://app-recetas-front.vercel.app",
 ]
 
+# Permitir todos los subdominios vercel.app (para previews)
+CORS_ALLOWED_ORIGIN_REGEXES = [r"^https://.*\.vercel\.app$"]
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://app-recetas-front.vercel.app",
-    "https://app-recetas-production.up.railway.app",  # 👈 Confía también para peticiones con cookies
+    "https://app-recetas-production.up.railway.app",
+    "https://*.vercel.app",
 ]
 
-
+# Configuración de cookies cross-domain
 CORS_ALLOW_CREDENTIALS = True
 SESSION_COOKIE_SAMESITE = None
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SAMESITE = None
 CSRF_COOKIE_SECURE = True
+
+# 👇 Muy importante para Railway detrás de proxy HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # ------------------------------------------------
 # ⚙️ REST FRAMEWORK CONFIG
