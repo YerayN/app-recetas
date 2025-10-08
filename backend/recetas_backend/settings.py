@@ -18,7 +18,17 @@ SECRET_KEY = os.getenv(
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
 # Detectar si estamos en producción
-IS_PRODUCTION = os.getenv("RAILWAY_ENVIRONMENT") is not None
+# ⚠️ CAMBIO: Detectar por múltiples métodos
+IS_PRODUCTION = (
+    os.getenv("RAILWAY_ENVIRONMENT") is not None or
+    os.getenv("RAILWAY_PROJECT_ID") is not None or
+    "railway.app" in os.getenv("RAILWAY_PUBLIC_DOMAIN", "")
+)
+
+# 🐛 DEBUG: Imprimir para verificar
+print(f"🔍 IS_PRODUCTION: {IS_PRODUCTION}")
+print(f"🔍 RAILWAY_ENVIRONMENT: {os.getenv('RAILWAY_ENVIRONMENT')}")
+print(f"🔍 RAILWAY_PROJECT_ID: {os.getenv('RAILWAY_PROJECT_ID')}")
 
 # Railway y Vercel pasarán estos valores por variables de entorno
 ALLOWED_HOSTS = [
@@ -139,7 +149,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:5173",
     "https://app-recetas-front.vercel.app",
     "https://app-recetas-production.up.railway.app",
-    "https://*.vercel.app",
 ]
 
 # ⚠️ CRÍTICO: Permitir credenciales (cookies)
@@ -150,11 +159,18 @@ CSRF_COOKIE_SECURE = IS_PRODUCTION  # True en producción (HTTPS), False en loca
 CSRF_COOKIE_HTTPONLY = False  # ⚠️ DEBE SER FALSE para que JS pueda leerla
 CSRF_COOKIE_SAMESITE = 'None' if IS_PRODUCTION else 'Lax'
 CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_DOMAIN = None  # ⚠️ Dejarlo en None para que funcione cross-domain
+
+# 🐛 DEBUG: Imprimir configuración CSRF
+print(f"🔍 CSRF_COOKIE_SECURE: {CSRF_COOKIE_SECURE}")
+print(f"🔍 CSRF_COOKIE_SAMESITE: {CSRF_COOKIE_SAMESITE}")
+print(f"🔍 CSRF_COOKIE_HTTPONLY: {CSRF_COOKIE_HTTPONLY}")
 
 # Configuración de cookie de sesión
 SESSION_COOKIE_SECURE = IS_PRODUCTION
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'None' if IS_PRODUCTION else 'Lax'
+SESSION_COOKIE_DOMAIN = None  # ⚠️ Dejarlo en None
 
 # 👇 Muy importante para Railway detrás de proxy HTTPS
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -181,10 +197,23 @@ LOGOUT_REDIRECT_URL = "/"
 # ------------------------------------------------
 # ⚙️ LOGGING (opcional, para depurar)
 # ------------------------------------------------
-if DEBUG:
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "handlers": {"console": {"class": "logging.StreamHandler"}},
-        "root": {"handlers": ["console"], "level": "DEBUG"},
-    }
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        }
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
